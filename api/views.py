@@ -8,8 +8,6 @@ from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializ
 from django.http import JsonResponse
 import json
 
-from api import serializers
-
 class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -23,10 +21,9 @@ class ProductView(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
 
     def create(self, request, *args, **kwargs):
-        if len(list(Product.objects.filter(id=request.POST['id']).values())) > 0:
+        if len(list(Product.objects.filter(id=request.data['id']).values())) > 0:
             return JsonResponse({'message':"Error: this id product already exist"})
         else:
-            print(request.data)
             serializer = ProductSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
