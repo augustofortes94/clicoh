@@ -7,7 +7,7 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ('id', 'date_time')
 
-class OrderDetailSerializer(serializers.HyperlinkedModelSerializer):
+class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderDetail
         fields = ('id', 'order', 'cuantity', 'product')
