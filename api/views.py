@@ -8,6 +8,8 @@ from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializ
 from django.http import JsonResponse
 import json
 
+from api import serializers
+
 class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
@@ -35,5 +37,13 @@ class ProductView(viewsets.ModelViewSet):
 
 class ProductViewApi(APIView):
     def patch(self, request, id, *args, **kargs):
-        print('HOLIWI')
-        pass
+        data = request.data
+        if len(list(Product.objects.filter(id=id).values())) == 0:
+            return JsonResponse({'message':"Error: this id product doesn't exist"})
+        if not 'stock' in data:
+            return JsonResponse({'message':"Error: this funtion is only for stock update"})
+        product_object = Product.objects.get(id=id)
+        product_object.stock = data['stock']
+        product_object.save()
+        serializer = ProductSerializer(product_object)
+        return Response(serializer.data)
