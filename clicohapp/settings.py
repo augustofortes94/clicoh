@@ -26,9 +26,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-e^!g&5my)_wk3^26nx6+%e9v=16o^s9p88#jhcx#^fz*^f+xe6'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+
+if os.getenv('ENVIRONMENT_MODE') == "prod":
+    DEBUG = False
+else:
+    DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CSRF_TRUSTED_ORIGINS = ["https://clicohapi.herokuapp.com"]
 
 
 # Application definition

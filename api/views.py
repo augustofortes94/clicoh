@@ -6,6 +6,8 @@ from .models import Order, OrderDetail, Product
 from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer, UserSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 import datetime, jwt
 
 class OrderView(viewsets.ModelViewSet):
@@ -69,6 +71,7 @@ class ProductViewApi(APIView):
         return Response(serializer.data)
 
 class ApiLogin(APIView):
+    @method_decorator(csrf_exempt)
     def post(self, request):
         username = request.data['username']
         password = request.data['password']
