@@ -78,12 +78,39 @@ WSGI_APPLICATION = 'clicohapp.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
+"""DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+}"""
+
+
+#PRODUCTION
+if os.getenv('ENVIRONMENT_MODE') == "prod":
+    DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'HOST': os.getenv('DATABASE_HOST'),
+        'PORT': '5432',
+        'USER': os.getenv('DATABASE_USER'),
+        'PASSWORD': os.getenv('DATABASE_PSW'),
+        'NAME': os.getenv('DATABASE_NAME')
+        }
+    }
+
+##DEV
+else:
+    DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'HOST': 'localhost',
+        'PORT': '5432',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'NAME': 'clicoh'
+        }
+    }
 
 
 # Password validation
