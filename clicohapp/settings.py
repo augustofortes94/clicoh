@@ -35,7 +35,7 @@ else:
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ["https://clicohapi.herokuapp.com"]
 
-
+AUTHENTICATION_BACKENDS = (('django.contrib.auth.backends.ModelBackend'),)
 # Application definition
 
 INSTALLED_APPS = [
