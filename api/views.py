@@ -1,13 +1,13 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order, OrderDetail, Product
-from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer, UserSerializer
+from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from .decorators import api_login_required
 import datetime, jwt
 
 class OrderView(viewsets.ModelViewSet):
@@ -18,6 +18,7 @@ class OrderDetailView(viewsets.ModelViewSet):
     queryset = OrderDetail.objects.all()
     serializer_class = OrderDetailSerializer
 
+    @api_login_required
     def create(self, request, *args, **kwargs):
         product = Product.objects.get(id=request.data['product'])
         if product.stock < request.data['cuantity'] or product.stock <= 0:
@@ -30,11 +31,13 @@ class OrderDetailView(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
 
+    @api_login_required
     def update(self, request, *args, **kwargs):
         print(request.data)
         orderDetail_object = OrderDetail.objects.get(id=request.data['id'])
         return super().update(request, *args, **kwargs)
 
+    @api_login_required
     def destroy(self, request, *args, **kwargs):
         product = Product.objects.get(id=self.get_object().product.id)
         cant = self.get_object().cuantity + product.stock
@@ -45,6 +48,7 @@ class ProductView(viewsets.ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 
+    @api_login_required
     def create(self, request, *args, **kwargs):
         if len(list(Product.objects.filter(id=request.data['id']).values())) > 0:
             return JsonResponse({'message':"Error: this id product already exist"})
@@ -61,6 +65,7 @@ class ProductView(viewsets.ModelViewSet):
         return product_object
 
 class ProductViewApi(APIView):
+    @api_login_required
     def patch(self, request, id, *args, **kargs):   #Edit STOCK
         data = request.data
         if len(list(Product.objects.filter(id=id).values())) == 0:
@@ -95,16 +100,4 @@ class ApiLogin(APIView):
             response.set_cookie(key='jwt', value=token, httponly=True)
             response.data = {'message': "Succes"}
             return response
-
-    def userVerifier(request):
-        token = request.COOKIES.get('jwt')
-        if token == None:
-            return False
-        try:
-            payload = jwt.decode(token, 'secret', algorithms=['HS256'])     #if the token can be decoded, it is a valid token
-        except Exception: #jwt.ExpiredSignatureError:
-            return False    #if the token is expired or something else, refuse
-
-        user = User.objects.filter(id=payload['id']).first()
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+            
