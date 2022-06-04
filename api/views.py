@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order, OrderDetail, Product
@@ -106,11 +106,11 @@ class ApiLogin(APIView):
 
         user = User.objects.filter(username=username).first()
         if user is None:
-            return JsonResponse({'message':"Error: user not found..."})
+            return Response({'message':"Error: user not found..."},status=status.HTTP_401_UNAUTHORIZED)
 
         else:
             if not user.check_password(password):
-                return JsonResponse({'message':"Error: incorrect password..."})
+                return Response({'message':"Error: incorrect password..."},status=status.HTTP_401_UNAUTHORIZED)
             
             payload = {
             'id': user.id,
@@ -119,8 +119,9 @@ class ApiLogin(APIView):
             }
             token = jwt.encode(payload, 'secret', algorithm='HS256')
 
-            response = Response()
+            response = Response(status=status.HTTP_200_OK)
             response.set_cookie(key='jwt', value=token, httponly=True)
             response.data = {'message': "Succes"}
             return response
+            
             
