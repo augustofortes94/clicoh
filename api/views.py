@@ -70,7 +70,6 @@ class ProductView(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
     
-    @api_login_required
     def edit_stock(id, stock):
         product_object = Product.objects.get(id=id)
         product_object.stock = stock
@@ -82,6 +81,10 @@ class ProductView(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 class ProductViewApi(APIView):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+    
     @api_login_required
     def patch(self, request, id, *args, **kargs):   #Edit STOCK
         data = request.data
@@ -94,6 +97,9 @@ class ProductViewApi(APIView):
 
 class ApiLogin(APIView):
     @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
     def post(self, request):
         username = request.data['username']
         password = request.data['password']
