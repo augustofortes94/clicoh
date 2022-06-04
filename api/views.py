@@ -14,6 +14,18 @@ class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+    @api_login_required
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+    
+    @api_login_required
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @api_login_required
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
 class OrderDetailView(viewsets.ModelViewSet):
     queryset = OrderDetail.objects.all()
     serializer_class = OrderDetailSerializer
@@ -58,11 +70,16 @@ class ProductView(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data)
     
+    @api_login_required
     def edit_stock(id, stock):
         product_object = Product.objects.get(id=id)
         product_object.stock = stock
         product_object.save()
         return product_object
+    
+    @api_login_required
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 class ProductViewApi(APIView):
     @api_login_required
