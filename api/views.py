@@ -1,3 +1,4 @@
+from unicodedata import name
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,7 +17,20 @@ class OrderView(viewsets.ModelViewSet):
 
     @api_login_required
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        order_object = Order.objects.create()
+        for product in request.data['products']:
+            try:
+                product_object = Product.objects.get(name=product['name'])  #if product exist
+                if product_object.stock - int(product['stock']) >= 0:    #if stock is enough
+                    OrderDetail.objects.create(
+                        order= order_object,
+                        cuantity= product['stock'],
+                        product= product_object,
+                    )
+                    ProductView.edit_stock(product_object.id, product_object.stock - int(product['stock'])) #update stock
+            except:
+                pass
+        return Response(status=status.HTTP_202_ACCEPTED)
     
     @api_login_required
     def update(self, request, *args, **kwargs):
@@ -24,6 +38,13 @@ class OrderView(viewsets.ModelViewSet):
 
     @api_login_required
     def destroy(self, request, *args, **kwargs):
+        try:
+            for orderDetail in OrderDetail.objects.filter(order=self.get_object()):
+                product_object = Product.objects.get(id=orderDetail.product_id)
+                ProductView.edit_stock(product_object.id, orderDetail.cuantity + product_object.stock) #update stock
+                OrderDetail.objects.filter(id=orderDetail.id).delete()
+        except:
+            pass
         return super().destroy(request, *args, **kwargs)
 
 class OrderDetailView(viewsets.ModelViewSet):
@@ -33,11 +54,11 @@ class OrderDetailView(viewsets.ModelViewSet):
     @api_login_required
     def create(self, request, *args, **kwargs):
         product = Product.objects.get(id=request.data['product'])
-        if product.stock < request.data['cuantity'] or product.stock <= 0:
+        if product.stock < int(request.data['cuantity']) or product.stock <= 0:
             return JsonResponse({'message':"Error: stock of that product is not enough"})
         else:
             order_object = Order.objects.create()
-            ProductView.edit_stock(product.id, product.stock-request.data['cuantity'])
+            ProductView.edit_stock(product.id, product.stock - int(request.data['cuantity']))
             serializer = OrderDetailSerializer(data= {'order': order_object.id, 'cuantity': request.data['cuantity'], 'product': request.data['product']})
             serializer.is_valid(raise_exception=True)
             serializer.save()
