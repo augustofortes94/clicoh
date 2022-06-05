@@ -1,3 +1,4 @@
+import json
 from unicodedata import name
 from venv import create
 from requests import delete
@@ -21,9 +22,6 @@ class OrderView(viewsets.ModelViewSet):
         orderDetails = list(OrderDetail.objects.filter(order=self.get_object()).values())
         return Response({'id':self.get_object().id, 'date_time':self.get_object().date_time, 'order_details':orderDetails})
 
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
     @api_login_required
     def create(self, request, *args, **kwargs):
         order_object = Order.objects.create()
@@ -41,24 +39,27 @@ class OrderView(viewsets.ModelViewSet):
     
     @api_login_required
     def update(self, request, *args, **kwargs):
-        for product in request.data['products']:    #detect if there is a product with not enough stock, and break before save any change
-            try:
+        if self.detect_duplicates(request):
+            return Response({'message':'Duplicated products'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            for product in request.data['products']:    #detect if there is a product with not enough stock, and break before save any change
+                try:
+                    product_object = Product.objects.get(name=product['name'])  #if product exist
+                    orderDetail_object = OrderDetail.objects.get(order=self.get_object(), product=product_object.id)
+                    amount = product_object.stock + orderDetail_object.cuantity - int(product['stock'])
+                    if amount < 0:    #if stock is enough, return bad request
+                        return Response({'message':'The stock requested is out of range'}, status=status.HTTP_400_BAD_REQUEST)
+                except:
+                    pass
+            
+            for product in request.data['products']:
                 product_object = Product.objects.get(name=product['name'])  #if product exist
                 orderDetail_object = OrderDetail.objects.get(order=self.get_object(), product=product_object.id)
                 amount = product_object.stock + orderDetail_object.cuantity - int(product['stock'])
-                if amount < 0:    #if stock is enough, return bad request
-                    return Response({'message':'The stock requested is out of range'}, status=status.HTTP_400_BAD_REQUEST)
-            except:
-                pass
-        
-        for product in request.data['products']:
-            product_object = Product.objects.get(name=product['name'])  #if product exist
-            orderDetail_object = OrderDetail.objects.get(order=self.get_object(), product=product_object.id)
-            amount = product_object.stock + orderDetail_object.cuantity - int(product['stock'])
-            orderDetail_object.cuantity = product['stock']
-            orderDetail_object.save()
-            ProductView.edit_stock(product_object.id, amount) #update stock
-        return Response(status=status.HTTP_202_ACCEPTED)
+                orderDetail_object.cuantity = product['stock']
+                orderDetail_object.save()
+                ProductView.edit_stock(product_object.id, amount) #update stock
+            return Response(status=status.HTTP_202_ACCEPTED)
 
     @api_login_required
     def destroy(self, request, *args, **kwargs):
@@ -70,6 +71,17 @@ class OrderView(viewsets.ModelViewSet):
         except:
             pass
         return super().destroy(request, *args, **kwargs)
+
+    def detect_duplicates(self, request):
+        dict = {}
+        a=0
+        for product in request.data['products']:
+            dict[a] = product['name']
+            a += 1
+        rev_dict = {}
+        for key, value in dict.items():
+            rev_dict.setdefault(value, set()).add(key)
+        return [key for key, values in rev_dict.items() if len(values) > 1]
 
 class OrderDetailView(viewsets.ModelViewSet):
     queryset = OrderDetail.objects.all()
