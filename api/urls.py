@@ -1,7 +1,7 @@
 from django.urls import path, include
 from . import views 
 from rest_framework import routers 
-from .views import ApiLogin
+from .views import ApiLogin, OrderView
 
 router = routers.DefaultRouter()
 router.register('orderDetails', views.OrderDetailView)

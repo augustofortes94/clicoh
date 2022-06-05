@@ -1,10 +1,11 @@
-import json
 from unicodedata import name
 from venv import create
 from requests import delete
+import requests
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from .models import Order, OrderDetail, Product
 from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer
 from django.http import JsonResponse
@@ -13,6 +14,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .decorators import api_login_required
 import datetime, jwt
+
+
+
 
 class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
@@ -82,6 +86,29 @@ class OrderView(viewsets.ModelViewSet):
         for key, value in dict.items():
             rev_dict.setdefault(value, set()).add(key)
         return [key for key, values in rev_dict.items() if len(values) > 1]
+
+    @api_login_required
+    @action(detail=True, methods=['get'])
+    def get_total(self, request, *args, **kwargs):
+        try:
+            total = 0
+            for orderDetail in OrderDetail.objects.filter(order=self.get_object()):
+                product_object = Product.objects.get(id=orderDetail.product_id)
+                total = total + (product_object.price * orderDetail.cuantity)
+            return Response({'total_price':total})
+        except:
+            pass
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    @api_login_required
+    @action(detail=True, methods=['get'])
+    def get_total_usd(self, request, *args, **kwargs):
+        try:
+            response = requests.get('https://www.dolarsi.com/api/api.php?type=valoresprincipales').json()
+            dolar_blue = float(response[1]['casa']['venta'].replace(',', '.'))
+            return Response({'total_price_usd':round((float(self.get_total(request).data['total_price']) / dolar_blue), 2)})
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class OrderDetailView(viewsets.ModelViewSet):
     queryset = OrderDetail.objects.all()

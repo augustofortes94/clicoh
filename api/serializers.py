@@ -1,3 +1,4 @@
+from dataclasses import fields
 from rest_framework import serializers
 from rest_framework.serializers import HyperlinkedModelSerializer
 from .models import Order, OrderDetail, Product
@@ -21,7 +22,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username']
+        fields = ('id', 'username')
         extra_kwargs = {
             'password': {'write_only': True}
         }
