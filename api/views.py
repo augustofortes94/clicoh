@@ -22,11 +22,9 @@ class OrderView(viewsets.ModelViewSet):
             try:
                 product_object = Product.objects.get(name=product['name'])  #if product exist
                 if product_object.stock - int(product['stock']) >= 0:    #if stock is enough
-                    OrderDetail.objects.create(
-                        order= order_object,
-                        cuantity= product['stock'],
-                        product= product_object,
-                    )
+                    serializer = OrderDetailSerializer(data= {'order': order_object.id, 'cuantity': product['stock'], 'product': product_object.id})
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()   #create OrderDetail
                     ProductView.edit_stock(product_object.id, product_object.stock - int(product['stock'])) #update stock
             except:
                 pass
