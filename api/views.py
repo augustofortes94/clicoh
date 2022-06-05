@@ -15,6 +15,14 @@ class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
 
+    def retrieve(self, request, *args, **kwargs):   #get by
+        orderDetails = list(OrderDetail.objects.filter(order=self.get_object()).values())
+        return Response({'id':self.get_object().id, 'date_time':self.get_object().date_time, 'order_details':orderDetails})
+
+    def list(self, request, *args, **kwargs):
+        print('entro al list')
+        return super().list(request, *args, **kwargs)
+
     @api_login_required
     def create(self, request, *args, **kwargs):
         order_object = Order.objects.create()
@@ -50,30 +58,10 @@ class OrderDetailView(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
 
     @api_login_required
-    def create(self, request, *args, **kwargs):
-        product = Product.objects.get(id=request.data['product'])
-        if product.stock < int(request.data['cuantity']) or product.stock <= 0:
-            return JsonResponse({'message':"Error: stock of that product is not enough"})
-        else:
-            order_object = Order.objects.create()
-            ProductView.edit_stock(product.id, product.stock - int(request.data['cuantity']))
-            serializer = OrderDetailSerializer(data= {'order': order_object.id, 'cuantity': request.data['cuantity'], 'product': request.data['product']})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
-
-    @api_login_required
     def update(self, request, *args, **kwargs):
         print(request.data)
         orderDetail_object = OrderDetail.objects.get(id=request.data['id'])
         return super().update(request, *args, **kwargs)
-
-    @api_login_required
-    def destroy(self, request, *args, **kwargs):
-        product = Product.objects.get(id=self.get_object().product.id)
-        cant = self.get_object().cuantity + product.stock
-        ProductView.edit_stock(self.get_object().product.id, cant)
-        return super().destroy(request, *args, **kwargs)
 
 class ProductView(viewsets.ModelViewSet):
     queryset = Product.objects.all()
