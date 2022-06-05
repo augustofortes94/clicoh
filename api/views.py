@@ -1,4 +1,6 @@
 from unicodedata import name
+from venv import create
+from requests import delete
 from rest_framework import viewsets, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -20,7 +22,6 @@ class OrderView(viewsets.ModelViewSet):
         return Response({'id':self.get_object().id, 'date_time':self.get_object().date_time, 'order_details':orderDetails})
 
     def list(self, request, *args, **kwargs):
-        print('entro al list')
         return super().list(request, *args, **kwargs)
 
     @api_login_required
@@ -40,7 +41,24 @@ class OrderView(viewsets.ModelViewSet):
     
     @api_login_required
     def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
+        for product in request.data['products']:    #detect if there is a product with not enough stock, and break before save any change
+            try:
+                product_object = Product.objects.get(name=product['name'])  #if product exist
+                orderDetail_object = OrderDetail.objects.get(order=self.get_object(), product=product_object.id)
+                amount = product_object.stock + orderDetail_object.cuantity - int(product['stock'])
+                if amount < 0:    #if stock is enough, return bad request
+                    return Response({'message':'The stock requested is out of range'}, status=status.HTTP_400_BAD_REQUEST)
+            except:
+                pass
+        
+        for product in request.data['products']:
+            product_object = Product.objects.get(name=product['name'])  #if product exist
+            orderDetail_object = OrderDetail.objects.get(order=self.get_object(), product=product_object.id)
+            amount = product_object.stock + orderDetail_object.cuantity - int(product['stock'])
+            orderDetail_object.cuantity = product['stock']
+            orderDetail_object.save()
+            ProductView.edit_stock(product_object.id, amount) #update stock
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     @api_login_required
     def destroy(self, request, *args, **kwargs):
@@ -58,10 +76,16 @@ class OrderDetailView(viewsets.ModelViewSet):
     serializer_class = OrderDetailSerializer
 
     @api_login_required
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @api_login_required
     def update(self, request, *args, **kwargs):
-        print(request.data)
-        orderDetail_object = OrderDetail.objects.get(id=request.data['id'])
         return super().update(request, *args, **kwargs)
+
+    @api_login_required
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 class ProductView(viewsets.ModelViewSet):
     queryset = Product.objects.all()
