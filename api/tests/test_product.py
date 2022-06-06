@@ -1,4 +1,3 @@
-from requests import request
 from .test_setup import UserTestCase
 from rest_framework import status
 from ..models import Product
@@ -83,6 +82,10 @@ class ProductTestCase(UserTestCase):
     def test_detele_product(self):
         product = self.create_product()
         response = self.client.delete('/products/' + product.id + '/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        response = self.client.get('/products/' + product.id + '/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['detail'], "Not found.")
 
         ##Error
         response = self.client.delete('/products/' + product.id + 'a/')

@@ -1,4 +1,3 @@
-from requests import request
 from .test_setup import UserTestCase
 from .test_product import ProductTestCase
 from rest_framework import status
@@ -31,3 +30,15 @@ class OrderTestCase(UserTestCase):
         product = ProductTestCase.create_product(self)
         response = self.client.post('/orders/', {"products": [{"name":product.name,"stock": 2}]})
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+    def test_delete_order(self):
+        order = self.create_order()
+        response = self.client.delete('/orders/' + str(order.id) + '/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        response = self.client.get('/orders/' + str(order.id) + '/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data['detail'], "Not found.")
+
+        ##Error
+        response = self.client.delete('/orders/' + str(order.id) + 'h/')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

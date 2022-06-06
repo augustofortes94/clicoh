@@ -67,9 +67,10 @@ class OrderView(viewsets.ModelViewSet):
                 product_object = Product.objects.get(id=orderDetail.product_id)
                 ProductView.edit_stock(product_object.id, orderDetail.cuantity + product_object.stock) #update stock
                 OrderDetail.objects.filter(id=orderDetail.id).delete()
+            Order.objects.filter(id=self.get_object().id).delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
         except:
-            return Response({'message':'Order not found'}, status=status.HTTP_400_BAD_REQUEST)
-        return super().destroy(request, *args, **kwargs)
+            return Response({'message':'Order not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def detect_duplicates(self, request):
         dict = {}
