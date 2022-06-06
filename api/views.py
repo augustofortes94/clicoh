@@ -1,6 +1,3 @@
-from unicodedata import name
-from venv import create
-from requests import delete
 import requests
 from rest_framework import viewsets, status, generics
 from rest_framework.views import APIView
@@ -14,9 +11,6 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from .decorators import api_login_required
 import datetime, jwt
-
-
-
 
 class OrderView(viewsets.ModelViewSet):
     queryset = Order.objects.all()
