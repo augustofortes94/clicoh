@@ -126,13 +126,16 @@ class ProductView(viewsets.ModelViewSet):
 
     @api_login_required
     def create(self, request, *args, **kwargs):
-        if len(list(Product.objects.filter(id=request.data['id']).values())) > 0:
-            return JsonResponse({'message':"Error: this id product already exist"})
-        else:
-            serializer = ProductSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+        try:
+            if len(list(Product.objects.filter(id=request.data['id']).values())) > 0:
+                return JsonResponse({'message':"Error: this id product already exist"})
+            else:
+                serializer = ProductSerializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data)
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def edit_stock(id, stock):
         product_object = Product.objects.get(id=id)
@@ -195,4 +198,4 @@ class APIRegister(generics.GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response({'message':'succes'})           
+        return Response({'message':'succes'}, status=status.HTTP_200_OK)           
