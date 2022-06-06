@@ -1,3 +1,5 @@
+from itertools import product
+from traceback import print_tb
 import requests
 from rest_framework import viewsets, status, generics
 from rest_framework.views import APIView
@@ -5,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Order, OrderDetail, Product
 from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer, RegisterSerializer
-from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -128,7 +129,7 @@ class ProductView(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         try:
             if len(list(Product.objects.filter(id=request.data['id']).values())) > 0:
-                return JsonResponse({'message':"Error: this id product already exist"})
+                return Response({'message':"Error: this id product already exist"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 serializer = ProductSerializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
@@ -145,7 +146,11 @@ class ProductView(viewsets.ModelViewSet):
     
     @api_login_required
     def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
+        try:
+            Product.objects.filter(id=self.get_object().id).delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
+        except:
+            return Response({'message':"Error: this id product already exist"}, status=status.HTTP_404_NOT_FOUND)
 
 class ProductViewApi(APIView):
     @method_decorator(csrf_exempt)
