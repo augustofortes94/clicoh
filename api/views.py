@@ -34,7 +34,7 @@ class OrderView(viewsets.ModelViewSet):
                     ProductView.edit_stock(product_object.id, product_object.stock - int(product['stock'])) #update stock
             except:
                 pass
-        return Response(status=status.HTTP_202_ACCEPTED)
+        return Response({'id':order_object.id, 'date_time':order_object.date_time} ,status=status.HTTP_202_ACCEPTED)
     
     @api_login_required
     def update(self, request, *args, **kwargs):

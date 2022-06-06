@@ -1,7 +1,3 @@
-from itertools import product
-from math import prod
-from urllib import response
-
 from requests import request
 from .test_setup import UserTestCase
 from rest_framework import status
@@ -26,7 +22,7 @@ class ProductTestCase(UserTestCase):
 
     def test_get_products_by_id(self):
         product = self.create_product()
-        response = self.client.get('/products/123/')
+        response = self.client.get('/products/' + product.id +'/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], product.id)
         self.assertEqual(response.data['name'], product.name)
