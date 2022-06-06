@@ -18,7 +18,7 @@ class OrderView(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):   #get by
         orderDetails = list(OrderDetail.objects.filter(order=self.get_object()).values())
-        return Response({'id':self.get_object().id, 'date_time':self.get_object().date_time, 'order_details':orderDetails})
+        return Response({'id':self.get_object().id, 'date_time':self.get_object().date_time, 'order_details':orderDetails}, status=status.HTTP_200_OK)
 
     @api_login_required
     def create(self, request, *args, **kwargs):
@@ -67,7 +67,7 @@ class OrderView(viewsets.ModelViewSet):
                 ProductView.edit_stock(product_object.id, orderDetail.cuantity + product_object.stock) #update stock
                 OrderDetail.objects.filter(id=orderDetail.id).delete()
         except:
-            pass
+            return Response({'message':'Order not found'}, status=status.HTTP_400_BAD_REQUEST)
         return super().destroy(request, *args, **kwargs)
 
     def detect_duplicates(self, request):
@@ -89,7 +89,7 @@ class OrderView(viewsets.ModelViewSet):
             for orderDetail in OrderDetail.objects.filter(order=self.get_object()):
                 product_object = Product.objects.get(id=orderDetail.product_id)
                 total = total + (product_object.price * orderDetail.cuantity)
-            return Response({'total_price':total})
+            return Response({'total_price':total}, status=status.HTTP_200_OK)
         except:
             pass
         return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -100,7 +100,7 @@ class OrderView(viewsets.ModelViewSet):
         try:
             response = requests.get('https://www.dolarsi.com/api/api.php?type=valoresprincipales').json()
             dolar_blue = float(response[1]['casa']['venta'].replace(',', '.'))
-            return Response({'total_price_usd':round((float(self.get_total(request).data['total_price']) / dolar_blue), 2)})
+            return Response({'total_price_usd':round((float(self.get_total(request).data['total_price']) / dolar_blue), 2)}, status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -133,7 +133,7 @@ class ProductView(viewsets.ModelViewSet):
                 serializer = ProductSerializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                return Response(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
     
@@ -156,11 +156,11 @@ class ProductViewApi(APIView):
     def patch(self, request, id, *args, **kargs):   #Edit STOCK
         data = request.data
         if len(list(Product.objects.filter(id=id).values())) == 0:
-            return JsonResponse({'message':"Error: this id product doesn't exist"})
+            return Response({'message':"Error: this id product doesn't exist"}, status=status.HTTP_400_BAD_REQUEST)
         if not 'stock' in data:
-            return JsonResponse({'message':"Error: this funtion is only for stock update"})
+            return Response({'message':"Error: this funtion is only for stock update"}, status=status.HTTP_400_BAD_REQUEST)
         serializer = ProductSerializer(ProductView.edit_stock(id, data['stock']))
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ApiLogin(APIView):
     @method_decorator(csrf_exempt)
@@ -170,22 +170,18 @@ class ApiLogin(APIView):
     def post(self, request):
         username = request.data['username']
         password = request.data['password']
-
         user = User.objects.filter(username=username).first()
         if user is None:
             return Response({'message':"Error: user not found..."},status=status.HTTP_401_UNAUTHORIZED)
-
         else:
             if not user.check_password(password):
                 return Response({'message':"Error: incorrect password..."},status=status.HTTP_401_UNAUTHORIZED)
-            
             payload = {
             'id': user.id,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
             'iat': datetime.datetime.utcnow()
             }
             token = jwt.encode(payload, 'secret', algorithm='HS256')
-
             response = Response(status=status.HTTP_200_OK)
             response.set_cookie(key='jwt', value=token, httponly=True)
             response.data = {'message': "Succes"}
