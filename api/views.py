@@ -2,12 +2,12 @@ from unicodedata import name
 from venv import create
 from requests import delete
 import requests
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from .models import Order, OrderDetail, Product
-from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer
+from .serializers import OrderSerializer, OrderDetailSerializer, ProductSerializer, RegisterSerializer
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
@@ -194,4 +194,11 @@ class ApiLogin(APIView):
             response.data = {'message': "Succes"}
             return response
             
-            
+class APIRegister(generics.GenericAPIView):
+    serializer_class = RegisterSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'message':'succes'})           
