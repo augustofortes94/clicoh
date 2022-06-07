@@ -49,7 +49,7 @@ class OrderView(viewsets.ModelViewSet):
                     if amount < 0:    #if stock is enough, return bad request
                         return Response({'message':'The stock requested is out of range'}, status=status.HTTP_400_BAD_REQUEST)
                 except:
-                    pass
+                    return Response(status=status.HTTP_404_NOT_FOUND)
             
             for product in request.data['products']:
                 product_object = Product.objects.get(name=product['name'])  #if product exist
@@ -100,7 +100,7 @@ class OrderView(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'])
     def get_total_usd(self, request, *args, **kwargs):
         try:
-            response = requests.get('https://www.dolarsi.com/api/api.php?type=valoresprincipales').json()
+            response = requests.get('https://www.dolarsi.com/api/api.php?type=valoresprincipales', timeout=30).json()
             dolar_blue = float(response[1]['casa']['venta'].replace(',', '.'))
             return Response({'total_price_usd':round((float(self.get_total(request).data['total_price']) / dolar_blue), 2)}, status=status.HTTP_200_OK)
         except:
