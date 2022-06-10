@@ -1,6 +1,6 @@
 from django.urls import path, include
-from . import views 
-from rest_framework import routers 
+from . import views
+from rest_framework import routers
 from .views import ApiLogin, APIRegister
 
 router = routers.DefaultRouter()

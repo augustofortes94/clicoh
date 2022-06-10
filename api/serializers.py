@@ -2,20 +2,24 @@ from rest_framework import serializers
 from .models import Order, OrderDetail, Product
 from django.contrib.auth.models import User
 
+
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('id', 'date_time')
+
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderDetail
         fields = ('id', 'order', 'cuantity', 'product')
 
+
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = ('id', 'name', 'price', 'stock')
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,6 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:

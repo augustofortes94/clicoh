@@ -91,31 +91,31 @@ WSGI_APPLICATION = 'clicohapp.wsgi.application'
 }"""
 
 
-#PRODUCTION
+# PRODUCTION
 if os.getenv('ENVIRONMENT_MODE') == "prod":
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'HOST': os.getenv('DATABASE_HOST'),
-        'PORT': '5432',
-        'USER': os.getenv('DATABASE_USER'),
-        'PASSWORD': os.getenv('DATABASE_PSW'),
-        'NAME': os.getenv('DATABASE_NAME')
-        }
-    }
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                    'HOST': os.getenv('DATABASE_HOST'),
+                    'PORT': '5432',
+                    'USER': os.getenv('DATABASE_USER'),
+                    'PASSWORD': os.getenv('DATABASE_PSW'),
+                    'NAME': os.getenv('DATABASE_NAME')
+                    }
+                }
 
-##DEV
+# DEV
 else:
     DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'HOST': 'localhost',
-        'PORT': '5432',
-        'USER': 'postgres',
-        'PASSWORD': '1234',
-        'NAME': 'clicoh'
-        }
-    }
+                'default': {
+                    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                    'HOST': 'localhost',
+                    'PORT': '5432',
+                    'USER': 'postgres',
+                    'PASSWORD': '1234',
+                    'NAME': 'clicoh'
+                    }
+                }
 
 
 # Password validation
@@ -137,7 +137,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-#JWT
+# JWT
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -158,7 +158,7 @@ SIMPLE_JWT = {
     'AUDIENCE': None,
     'ISSUER': None,
     'JWK_URL': None,
-    'LEEWAY': 0, 
+    'LEEWAY': 0,
 
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
